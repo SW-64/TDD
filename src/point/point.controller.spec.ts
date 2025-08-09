@@ -32,8 +32,8 @@ describe('PointController', () => {
   });
 
   it('잔액이 부족할 경우 에러 반환', async () => {
-    // Given: 유저 1이 초기 포인트 1500원 상태
-    await controller.charge('1', { amount: 1500 });
+    // Given: 유저 1이 초기 포인트 500원 상태
+    await controller.charge('1', { amount: 500 });
 
     // When & Then: 1500원 사용 시 ConflictException 발생
     await expect(controller.use('1', { amount: 1500 })).rejects.toBeInstanceOf(
