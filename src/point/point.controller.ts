@@ -25,8 +25,8 @@ export class PointController {
   @Get(':id')
   async point(@Param('id') id): Promise<UserPoint> {
     const userId = Number.parseInt(id);
-    const getUser = await this.userDb.selectById(userId);
-    return { id: userId, point: getUser.point, updateMillis: Date.now() };
+    const user = await this.userDb.selectById(userId);
+    return { id: userId, point: user.point, updateMillis: Date.now() };
   }
 
   /**
@@ -35,8 +35,8 @@ export class PointController {
   @Get(':id/histories')
   async history(@Param('id') id): Promise<PointHistory[]> {
     const userId = Number.parseInt(id);
-    const getUserPointHistory = await this.historyDb.selectAllByUserId(userId);
-    return getUserPointHistory;
+    const userPointHistory = await this.historyDb.selectAllByUserId(userId);
+    return userPointHistory;
   }
 
   /**
@@ -49,16 +49,16 @@ export class PointController {
   ): Promise<UserPoint> {
     const userId = Number.parseInt(id);
     const amount = pointDto.amount;
-    const getUser = await this.userDb.selectById(userId);
-    const updatedPointHistory = await this.historyDb.insert(
+    const user = await this.userDb.selectById(userId);
+    const chargedPoint = user.point + amount;
+
+    await this.userDb.insertOrUpdate(userId, chargedPoint);
+    await this.historyDb.insert(
       userId,
       amount,
       TransactionType.CHARGE,
       Date.now(),
     );
-
-    const chargedPoint = getUser.point + amount;
-    await this.userDb.insertOrUpdate(userId, chargedPoint);
     return { id: userId, point: chargedPoint, updateMillis: Date.now() };
   }
 
@@ -72,10 +72,10 @@ export class PointController {
   ): Promise<UserPoint> {
     const userId = Number.parseInt(id);
     const amount = pointDto.amount;
-    const getUser = await this.userDb.selectById(userId);
+    const user = await this.userDb.selectById(userId);
 
-    const usedPoint = getUser.point - amount;
-    if (usedPoint < 0) {
+    const remainPoint = user.point - amount;
+    if (remainPoint < 0) {
       throw new ConflictException('포인트가 부족합니다.');
     }
 
@@ -86,7 +86,7 @@ export class PointController {
       Date.now(),
     );
 
-    await this.userDb.insertOrUpdate(userId, usedPoint);
-    return { id: userId, point: usedPoint, updateMillis: Date.now() };
+    await this.userDb.insertOrUpdate(userId, remainPoint);
+    return { id: userId, point: remainPoint, updateMillis: Date.now() };
   }
 }
