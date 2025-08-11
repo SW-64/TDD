@@ -3,21 +3,67 @@ import { PointController } from './point.controller';
 import { UserPointTable } from '../database/userpoint.table';
 import { PointHistoryTable } from '../database/pointhistory.table';
 import { ConflictException } from '@nestjs/common';
+// MockUserPointTable
+class MockUserPointTable {
+  private data = new Map<
+    number,
+    { id: number; point: number; updateMillis: number }
+  >();
 
+  async selectById(userId: number) {
+    if (!this.data.has(userId)) {
+      this.data.set(userId, { id: userId, point: 0, updateMillis: Date.now() });
+    }
+    return this.data.get(userId);
+  }
+
+  async insertOrUpdate(userId: number, point: number) {
+    const now = Date.now();
+    this.data.set(userId, { id: userId, point, updateMillis: now });
+    return this.data.get(userId);
+  }
+}
+
+// MockPointHistoryTable
+class MockPointHistoryTable {
+  private data = new Map<number, any[]>();
+
+  async selectAllByUserId(userId: number) {
+    return this.data.get(userId) || [];
+  }
+
+  async insert(
+    userId: number,
+    amount: number,
+    type: number,
+    timestamp: number,
+  ) {
+    if (!this.data.has(userId)) {
+      this.data.set(userId, []);
+    }
+    const history = { userId, amount, type, timestamp };
+    this.data.get(userId).push(history);
+    return history;
+  }
+}
 describe('PointController', () => {
   let controller: PointController;
-  let userDb: UserPointTable;
-  let historyDb: PointHistoryTable;
+  let userDb: MockUserPointTable;
+  let historyDb: MockPointHistoryTable;
 
   beforeEach(async () => {
+    userDb = new MockUserPointTable();
+    historyDb = new MockPointHistoryTable();
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PointController],
-      providers: [UserPointTable, PointHistoryTable],
+      providers: [
+        { provide: UserPointTable, useValue: userDb },
+        { provide: PointHistoryTable, useValue: historyDb },
+      ],
     }).compile();
 
     controller = module.get<PointController>(PointController);
-    userDb = module.get<UserPointTable>(UserPointTable);
-    historyDb = module.get<PointHistoryTable>(PointHistoryTable);
   });
 
   it('0원에서 1000원 충전 시, 1000원으로 증가해야 한다', async () => {
