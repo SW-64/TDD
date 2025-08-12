@@ -68,10 +68,17 @@ describe('PointController', () => {
 
   it('0원에서 1000원 충전 시, 1000원으로 증가해야 한다', async () => {
     // Given : 유저 1이 0원을 갖고 있는 상태
-    await controller.charge('1', { amount: 0 });
+    const userBeforeCharge = await controller.point('1');
+    const userAfterCharge = await controller.charge('1', {
+      amount: 0,
+      prevUpdateMillis: userBeforeCharge.updateMillis,
+    });
 
     // When: 포인트 1000원 충전
-    const result = await controller.charge('1', { amount: 1000 });
+    const result = await controller.charge('1', {
+      amount: 1000,
+      prevUpdateMillis: userAfterCharge.updateMillis,
+    });
 
     // Then: point가 1000원이 되어야 함
     expect(result.point).toBe(1000);
@@ -79,20 +86,34 @@ describe('PointController', () => {
 
   it('잔액이 부족할 경우 에러 반환', async () => {
     // Given: 유저 1이 초기 포인트 500원 상태
-    await controller.charge('1', { amount: 500 });
+    const userBeforeCharge = await controller.point('1');
+    const userAfterCharge = await controller.charge('1', {
+      amount: 500,
+      prevUpdateMillis: userBeforeCharge.updateMillis,
+    });
 
     // When & Then: 1500원 사용 시 ConflictException 발생
-    await expect(controller.use('1', { amount: 1500 })).rejects.toBeInstanceOf(
-      ConflictException,
-    );
+    await expect(
+      controller.use('1', {
+        amount: 1500,
+        prevUpdateMillis: userAfterCharge.updateMillis,
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('1500원에서 1000원을 사용 시, 500원이 남아야 한다.', async () => {
     // Given: 유저 1이 초기 포인트 1500원 상태
-    await controller.charge('1', { amount: 1500 });
+    const userBeforeCharge = await controller.point('1');
+    const userAfterCharge = await controller.charge('1', {
+      amount: 1500,
+      prevUpdateMillis: userBeforeCharge.updateMillis,
+    });
 
     // When: 유저 1이 포인트 1000원 사용
-    const result = await controller.use('1', { amount: 1000 });
+    const result = await controller.use('1', {
+      amount: 1000,
+      prevUpdateMillis: userAfterCharge.updateMillis,
+    });
 
     // Then: 남는 point가 500원이 되어야 함
     expect(result.point).toBe(500);
@@ -100,7 +121,11 @@ describe('PointController', () => {
 
   it('유저의 현재 포인트를 조회할 수 있어야 한다', async () => {
     // Given: 유저 1이 1000포인트를 갖고 있는 상태
-    await controller.charge('1', { amount: 1000 });
+    const userBeforeCharge = await controller.point('1');
+    const userAfterCharge = await controller.charge('1', {
+      amount: 1000,
+      prevUpdateMillis: userBeforeCharge.updateMillis,
+    });
 
     // When: 유저 1의 포인트 조회 API 호출
     const result = await controller.point('1');
@@ -112,8 +137,15 @@ describe('PointController', () => {
   it('유저의 이용 내역을 조회할 수 있어야 한다', async () => {
     // Given: 유저 1이 포인트를 충전하고 사용한 기록이 있는 상태
     // 유저 1이 포인트 1000원을 충전하고, 300원을 사용한 상태
-    await controller.charge('1', { amount: 1000 });
-    await controller.use('1', { amount: 300 });
+    const userBeforeCharge = await controller.point('1');
+    const userAfterCharge = await controller.charge('1', {
+      amount: 1000,
+      prevUpdateMillis: userBeforeCharge.updateMillis,
+    });
+    await controller.use('1', {
+      amount: 300,
+      prevUpdateMillis: userAfterCharge.updateMillis,
+    });
 
     // When: 이용 내역 조회 API 호출
     const result = await controller.history('1');
