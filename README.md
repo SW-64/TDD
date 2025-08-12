@@ -47,4 +47,36 @@
 ---
 
 
+## 4. 실제 코드 작성
 
+### 비관적 락
+
+적용시키고 싶었으나, 메모리 기반 DB에서는 비관적 락을 구현할 수 없어 적용하지 못했다.
+
+
+### 낙관적 락
+
+충전 기능에 낙관적 락을 적용했다.
+<br /> 
+```
+export class PointBody {
+  @IsInt()
+  amount: number;
+
+  @IsInt()
+  prevUpdateMillis: number;
+}
+```
+클라이언트가 수정 요청 시점의 updateMillis 값을 함께 전달받는다.
+
+```
+// 낙관적 락 체크
+    if (user.updateMillis !== pointDto.prevUpdateMillis) {
+      throw new ConflictException(
+        '다른 요청에 의해 이미 변경된 데이터입니다. 다시 시도해주세요.',
+      );
+    }
+```
+
+데이터 조회 시점의 updateMillis와 클라이언트가 보낸 prevUpdateMillis를 비교한다.
+<br/> 값이 일치하면 요청을 허용하고, 다르면 동시성 충돌로 판단하여 에러를 반환한다.
