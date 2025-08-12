@@ -27,7 +27,11 @@ export class UserPointTable {
     return new Promise((r) =>
       setTimeout(() => {
         console.log(`포인트 : ${amount}`);
-        const userPoint = { id: id, point: amount, updateMillis: Date.now() };
+        const userPoint = {
+          id: id,
+          point: amount,
+          updateMillis: Date.now() + 1,
+        };
         this.table.set(id, userPoint);
         r(userPoint);
       }, randomInt(300)),

@@ -156,4 +156,24 @@ describe('PointController', () => {
     expect(result[0]).toMatchObject({ amount: 1000, type: 0 });
     expect(result[1]).toMatchObject({ amount: 300, type: 1 });
   });
+
+  it('동시에 두 번 충전 요청 시, 한 번은 성공, 다른 한 번은 ConflictException 발생', async () => {
+    // Given: 유저 1 0을 갖고 있는 상황
+    const userBefore = await controller.point('1');
+
+    // When : 동시에 두 개의 charge 요청 준비 ( 두번째 호출에서는 updateMillis를 1을 추가하여 실패 유도 )
+    // Then: 한 번은 성공, 다른 한 번은 ConflictException 발생
+    await expect(
+      controller.charge('1', {
+        amount: 500,
+        prevUpdateMillis: userBefore.updateMillis,
+      }),
+    ).resolves.toBeDefined();
+    await expect(
+      controller.charge('1', {
+        amount: 300,
+        prevUpdateMillis: userBefore.updateMillis + 1,
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
 });
