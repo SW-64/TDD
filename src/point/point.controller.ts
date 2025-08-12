@@ -26,7 +26,8 @@ export class PointController {
   async point(@Param('id') id): Promise<UserPoint> {
     const userId = Number.parseInt(id);
     const user = await this.userDb.selectById(userId);
-    return { id: userId, point: user.point, updateMillis: Date.now() };
+    console.log(user);
+    return { id: userId, point: user.point, updateMillis: user.updateMillis };
   }
 
   /**
@@ -50,16 +51,27 @@ export class PointController {
     const userId = Number.parseInt(id);
     const amount = pointDto.amount;
     const user = await this.userDb.selectById(userId);
+    console.log(user);
+    // 낙관적 락 체크
+    if (user.updateMillis !== pointDto.prevUpdateMillis) {
+      throw new ConflictException(
+        '다른 요청에 의해 이미 변경된 데이터입니다. 다시 시도해주세요.',
+      );
+    }
     const chargedPoint = user.point + amount;
 
-    await this.userDb.insertOrUpdate(userId, chargedPoint);
+    const updatedUser = await this.userDb.insertOrUpdate(userId, chargedPoint);
     await this.historyDb.insert(
       userId,
       amount,
       TransactionType.CHARGE,
-      Date.now(),
+      updatedUser.updateMillis,
     );
-    return { id: userId, point: chargedPoint, updateMillis: Date.now() };
+    return {
+      id: userId,
+      point: chargedPoint,
+      updateMillis: updatedUser.updateMillis,
+    };
   }
 
   /**
