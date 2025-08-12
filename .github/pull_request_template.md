@@ -9,16 +9,16 @@
 동시성 테스트 코드 : d93ji3
 -->
 
-- Git 세팅 : f96e10d, f9c0bef
-- TODO 기본 기능 구현 : 15929f5
-- Test Code 초기 설정 : 1616ddb
-- Test Code 기본 기능 구현 완료 : 7d88f03
-- 변수명 변경 : 10795e6
-- 잔액이 부족할 경우, 테스트 코드에서 발생한 에러 해결 : 15c1ca0
-- Test Code Mock DB로 변경 : 2dd09c8
-- 포인트 사용 기능 낙관적 락 도입 : 10c2924
-- 기존 테스트코드 함수 인자값 변경 : 0b5a350
-- 동시성처리 테스트코드 추가 : 126f6ac
+- FEAT : Git 세팅 : f96e10d, f9c0bef
+- FEAT : TODO 기본 기능 구현 : 15929f5
+- FEAT : Test Code 초기 설정 : 1616ddb
+- FEAT : Test Code 기본 기능 구현 완료 : 7d88f03
+- UPDATE : 변수명 변경 : 10795e6
+- FIX : 잔액이 부족할 경우, 테스트 코드에서 발생한 에러 해결 : 15c1ca0
+- UPDATE : Test Code Mock DB로 변경 : 2dd09c8
+- FEAT : 포인트 사용 기능 낙관적 락 도입 : 10c2924
+- UPDATE : 기존 테스트코드 함수 인자값 변경 : 0b5a350
+- FEAT : 동시성처리 테스트코드 추가 : 126f6ac
 
 ---
 
